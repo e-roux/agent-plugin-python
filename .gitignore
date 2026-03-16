@@ -1,0 +1,7 @@
+# Audit logs (written by hook scripts and opencode plugin, never committed)
+hooks/logs/
+.github/hooks/logs/
+.opencode/logs/
+
+# Node/Bun artifacts
+node_modules/
