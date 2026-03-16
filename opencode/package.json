@@ -1,0 +1,39 @@
+{
+  "name": "opencode-python-enforcer",
+  "version": "0.3.0",
+  "description": "OpenCode plugin that enforces the uv toolchain for Python development: blocks pip, python, virtualenv, mypy, and poetry.",
+  "keywords": [
+    "opencode",
+    "plugin",
+    "python",
+    "uv",
+    "development",
+    "toolchain"
+  ],
+  "homepage": "https://github.com/e-roux/agent-plugin-python#readme",
+  "bugs": {
+    "url": "https://github.com/e-roux/agent-plugin-python/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/e-roux/agent-plugin-python.git",
+    "directory": "opencode"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Emmanuel Roux"
+  },
+  "type": "module",
+  "main": "index.ts",
+  "files": [
+    "index.ts",
+    "core.ts",
+    "command/"
+  ],
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=0.13.7"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

@@ -1,32 +1,38 @@
 # Agent instructions
 
-This repository provides a Python development plugin for AI coding agents. The plugin enforces the `uv` toolchain and blocks direct use of `pip`, `python`, `virtualenv`, `mypy`, and `poetry`. Two agents are currently supported: GitHub Copilot CLI and OpenCode.
+This repository is a monorepo providing a Python development plugin for AI coding agents. It enforces the `uv` toolchain and blocks direct use of `pip`, `python`, `virtualenv`, `mypy`, and `poetry`. Two agents are currently supported: GitHub Copilot CLI and OpenCode.
+
+## Repository structure
+
+```
+agent-plugin-python/
+├── copilot-cli/     GitHub Copilot CLI plugin (plugin.json, hooks/, skill/)
+├── opencode/        OpenCode npm package (package.json, core.ts, index.ts)
+└── test/
+    ├── copilot-cli/ Tests for the Copilot CLI integration
+    └── opencode/    Tests for the OpenCode integration
+```
 
 ## Toolchain constraint
 
 Direct use of `python`, `python3`, `pip`, `pip3`, or `venv` is prohibited everywhere in this repository, including in test scripts. Use `uv run`, `uv add`, and `uvx` exclusively.
 
-## Plugin structure
+## Version synchronisation
 
-Each agent has its own integration layer:
-
-- **Copilot CLI** — shell hooks (`hooks/scripts/`) configured via `hooks/policy.json`, and a skill (`skill/SKILL.md`) loaded into the agent context.
-- **OpenCode** — a TypeScript plugin (`opencode/core.ts`, `opencode/index.ts`) that subscribes to `tool.execute.before` and a command document (`opencode/command/python.md`).
-
-Both enforce the same blocking rules. See README.md for the full resource inventory.
+`opencode/package.json` is the version source of truth. `copilot-cli/plugin.json` must carry the same version. The `make version.check` target enforces this and is part of `make qa`. Never commit with mismatched versions.
 
 ## Development guidelines
 
-- Implement tests before writing implementation code. Know what you are building before you build it.
+- Implement tests before writing implementation code.
 - Keep the Makefile well organised. Do not add targets without a clear purpose.
 - Minimise third-party dependencies. Security is a primary concern.
-- Run `make qa` before every commit.
+- Run `make qa` before every commit. `make qa` runs `version.check + check + test`.
 
 ## Testing
 
-### Copilot CLI hooks
+### Copilot CLI hooks (`copilot-cli/`)
 
-Hooks are unit-tested with bats (`test/hooks.bats`) and end-to-end with a real Copilot CLI invocation (`test/hooks_e2e.bats`).
+Hooks are unit-tested with bats (`test/copilot-cli/hooks.bats`) and end-to-end with a real Copilot CLI invocation (`test/copilot-cli/hooks_e2e.bats`).
 
 E2E tests must:
 
@@ -39,17 +45,21 @@ E2E tests must:
 
 A hook test that does not invoke the real `copilot` binary is considered failing.
 
-### OpenCode plugin
+### OpenCode plugin (`opencode/`)
 
-The rule engine is unit-tested with `bun test` (`test/opencode.test.ts`) and end-to-end with a real OpenCode invocation (`test/opencode_e2e.bats`).
+The rule engine is unit-tested with `bun test` (`test/opencode/core.test.ts`) and end-to-end with a real OpenCode invocation (`test/opencode/e2e.bats`).
 
 E2E tests must:
 
 - Work from a `TMPDIR`.
-- Copy the plugin files into `.opencode/plugins/` in the temporary directory.
-- Evaluate denied commands from audit logs (`.opencode/logs/pre-tool-denied.log`).
+- Copy `core.ts` and `index.ts` into `.opencode/plugins/` in the temporary directory.
+- Evaluate denied commands from `.opencode/logs/pre-tool-denied.log`.
 
 A plugin test that does not invoke the real `opencode` binary is considered failing.
+
+## Publishing
+
+Run `make publish` after merging a release PR. This creates a GitHub Release tagged `v<VERSION>` using the CHANGELOG as release notes. The OpenCode package is distributed via npm as `opencode-python-enforcer`; publish separately with `bun publish` inside `opencode/` when ready to push to the npm registry.
 
 ## References
 
@@ -57,6 +67,7 @@ A plugin test that does not invoke the real `opencode` binary is considered fail
 
 - CLI command reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference
 - Plugin reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
+- Creating a plugin: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating
 - Custom agents configuration: https://docs.github.com/en/copilot/reference/custom-agents-configuration
 - Hooks configuration: https://docs.github.com/en/copilot/reference/hooks-configuration
 

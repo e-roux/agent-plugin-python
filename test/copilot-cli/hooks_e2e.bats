@@ -14,7 +14,7 @@
 #
 # IMPORTANT: These tests make real API calls (gpt-4.1) and take ~30-90s each.
 
-PLUGIN_SRC="$BATS_TEST_DIRNAME/.."
+PLUGIN_SRC="$BATS_TEST_DIRNAME/../../copilot-cli"
 
 setup() {
   WORK="$(mktemp -d)"

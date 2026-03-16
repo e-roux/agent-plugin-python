@@ -12,7 +12,7 @@
 # IMPORTANT: These tests make real API calls (github-copilot/gpt-4.1)
 #            and take ~30-90s each.
 
-PLUGIN_SRC="$BATS_TEST_DIRNAME/../opencode"
+PLUGIN_SRC="$BATS_TEST_DIRNAME/../../opencode"
 
 setup() {
   WORK="$(mktemp -d)"
