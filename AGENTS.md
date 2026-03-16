@@ -1,51 +1,70 @@
-# Copilot cli python plugin
-This is my opiniated python copilot plugin
+# Agent instructions
 
-## skills
+This repository provides a Python development plugin for AI coding agents. The plugin enforces the `uv` toolchain and blocks direct use of `pip`, `python`, `virtualenv`, `mypy`, and `poetry`. Two agents are currently supported: GitHub Copilot CLI and OpenCode.
 
+## Toolchain constraint
 
-## Hooks
-### `python`, `pip` and `uv`
-Direct usage of pip/python/... are PROHIBITED and NOT ALLOWED. 
+Direct use of `python`, `python3`, `pip`, `pip3`, or `venv` is prohibited everywhere in this repository, including in test scripts. Use `uv run`, `uv add`, and `uvx` exclusively.
 
-How to ensure that? FORCE copilot to use uv instead:
-- scripts must have with inline dependencies and shebang
-- uv projects use projecst with `pyproject.toml`.
+## Plugin structure
 
-Some e2e test triggered from the Makefile using copilot to generate a project or a
-script in a tmpdir based. Multiple attempt and NO `python/pip/python3/venv` call are allowed, strictly.
+Each agent has its own integration layer:
 
-If python or pip is ran directly, the test can be considered as fail. Strictly.
-## Test
-### Hooks
-Hooks are tested in the `hooks.test` PHONY target. In order to validate them, create 
-## Agent instruction:
-- make sure you are aware about the documentation of copilot
-- make sure the Makefile follow the MAkefile's skill practice strictly. Keep the Makefile well organized but not bloated with tons of targets.
-- implement tests first: you must know WHAT we are implementing precisly. You shall use various runner depending on the task (pytest, bats, etc, etc)
-- security is EXTREMLY important, do not use too many third part add-on, stay on the secure side. 
-- when testing with `copilot` cli, you MUST add 
-    - you MUST work from a TMPDIR, not from the current location -> hooks must be copied in the TMPDIR prior to `copilot` execution in this dir.
-    - Execute a prompt in non-interactive mode (exits after completion): `-p <PROMPT>`
-    - the ONLY model allowed is "gpt-4.1" so set the flag `--model "gpt-4.1"`. This is NOT NEGOCIABLE as costs are related if another model is used.
-    - no builtin mcp flag must be set `--disable-builtin-mcps`
-    - se the most secure way of non interactive mode `--no-ask-user`, `--allow-all-tools`: look at `copilot --help` to find out the proper way of running copilot in non interactive mode. 
-    - NO SECURITY COMMNANDS ARE ALLOWED. WE MUST PUT SAFETY AT THE VERY FIRST POSITION.
-- you must as a LLM be JUDGE: do we fill really the copilot configuration expectation? I await a perfect configuraiton and perfect behavior over the expressed requirements.
+- **Copilot CLI** — shell hooks (`hooks/scripts/`) configured via `hooks/policy.json`, and a skill (`skill/SKILL.md`) loaded into the agent context.
+- **OpenCode** — a TypeScript plugin (`opencode/core.ts`, `opencode/index.ts`) that subscribes to `tool.execute.before` and a command document (`opencode/command/python.md`).
 
-**MANDATORY STEP NOT TO BYPASS**: hooks behavior MUST be tested e2e. How: call `copilot` in tests in non interactive mode, providing the prompt that should cover a failing/successful hook call. Based on the response, assess if the hooks did its roles or not. Fail if not. 
+Both enforce the same blocking rules. See README.md for the full resource inventory.
 
-IMPORTANT: **If a hook is not testing using `copilot`, the test is FAILED.**
+## Development guidelines
+
+- Implement tests before writing implementation code. Know what you are building before you build it.
+- Keep the Makefile well organised. Do not add targets without a clear purpose.
+- Minimise third-party dependencies. Security is a primary concern.
+- Run `make qa` before every commit.
+
+## Testing
+
+### Copilot CLI hooks
+
+Hooks are unit-tested with bats (`test/hooks.bats`) and end-to-end with a real Copilot CLI invocation (`test/hooks_e2e.bats`).
+
+E2E tests must:
+
+- Work from a `TMPDIR` — never from the repository root.
+- Copy hook scripts into the temporary directory under `.github/hooks/scripts/` and write a corresponding `policy.json` before invoking `copilot`.
+- Use only model `gpt-4.1` (`--model "gpt-4.1"`). This is not negotiable.
+- Pass `--disable-builtin-mcps`, `--no-ask-user`, and `--allow-all-tools` for non-interactive execution.
+- Pass the prompt via `-p <PROMPT>`.
+- Evaluate the outcome from audit logs (`pre-tool-denied.log`, `session-start.log`) and the CLI response.
+
+A hook test that does not invoke the real `copilot` binary is considered failing.
+
+### OpenCode plugin
+
+The rule engine is unit-tested with `bun test` (`test/opencode.test.ts`) and end-to-end with a real OpenCode invocation (`test/opencode_e2e.bats`).
+
+E2E tests must:
+
+- Work from a `TMPDIR`.
+- Copy the plugin files into `.opencode/plugins/` in the temporary directory.
+- Evaluate denied commands from audit logs (`.opencode/logs/pre-tool-denied.log`).
+
+A plugin test that does not invoke the real `opencode` binary is considered failing.
 
 ## References
-### Official copilot documentation
-cli commands: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference
-plugin: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
-Agents: https://docs.github.com/en/copilot/reference/custom-agents-configuration
-Hooks: https://docs.github.com/en/copilot/reference/hooks-configuration
-### `uv` documentation
-scripts with inline deps: https://docs.astral.sh/uv/guides/scripts
-projects: https://docs.astral.sh/uv/guides/projects/
 
-### Other
-https://smartscope.blog/en/generative-ai/github-copilot/github-copilot-hooks-guide
+### GitHub Copilot CLI
+
+- CLI command reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference
+- Plugin reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
+- Custom agents configuration: https://docs.github.com/en/copilot/reference/custom-agents-configuration
+- Hooks configuration: https://docs.github.com/en/copilot/reference/hooks-configuration
+
+### OpenCode
+
+- Plugin documentation: https://opencode.ai/docs/plugins
+
+### uv
+
+- Scripts with inline dependencies (PEP 723): https://docs.astral.sh/uv/guides/scripts
+- Projects: https://docs.astral.sh/uv/guides/projects/
