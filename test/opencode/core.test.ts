@@ -11,7 +11,7 @@ import {
   defaultRules,
   type BlockRule,
   type RewriteRule,
-} from "../opencode/core";
+} from "../../opencode/core";
 
 // ── matchesRule ──────────────────────────────────────────────────────────────
 

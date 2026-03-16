@@ -1,11 +1,14 @@
 /**
  * OpenCode plugin: Python toolchain enforcer.
  *
- * Mirrors the copilot pre-tool hook: blocks direct python/pip/virtualenv/mypy
+ * Mirrors the copilot-cli pre-tool hook: blocks direct python/pip/virtualenv/mypy/poetry
  * calls and directs the agent to use uv and zmypy instead.
  *
- * Install (global): copy core.ts + index.ts to ~/.config/opencode/plugins/
- * Install (project): copy core.ts + index.ts to .opencode/plugins/
+ * Install via npm (add to opencode.json config):
+ *   { "plugin": ["opencode-python-enforcer"] }
+ *
+ * Install from this repository (project-level):
+ *   Copy core.ts + index.ts to .opencode/plugins/
  */
 import type { Plugin } from "@opencode-ai/plugin";
 import { appendFileSync, mkdirSync } from "node:fs";
