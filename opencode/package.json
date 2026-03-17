@@ -1,6 +1,6 @@
 {
   "name": "opencode-python-enforcer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "OpenCode plugin that enforces the uv toolchain for Python development: blocks pip, python, virtualenv, mypy, and poetry.",
   "keywords": [
     "opencode",

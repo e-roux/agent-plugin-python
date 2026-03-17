@@ -13,13 +13,37 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { defaultRules, intercept } from "./core";
+import { BASH_TOOL_ADDENDUM, PYTHON_POLICY, defaultRules, intercept } from "./core";
 
 export const PythonEnforcerPlugin: Plugin = async ({ directory }) => {
   const logDir = join(directory, ".opencode", "logs");
   const deniedLog = join(logDir, "pre-tool-denied.log");
 
   return {
+    // ── Proactive policy injection ────────────────────────────────────────────
+
+    // Inject Python toolchain policy into the system prompt so the LLM knows
+    // the rules before it has a chance to violate them.
+    "experimental.chat.system.transform": async (_input, output) => {
+      output.system.push(PYTHON_POLICY);
+    },
+
+    // Augment the bash tool description so the blocked-command list appears
+    // in every tool-call context window.
+    "tool.definition": async (input, output) => {
+      if (input.toolID === "bash") {
+        output.description += BASH_TOOL_ADDENDUM;
+      }
+    },
+
+    // Preserve the Python toolchain policy during session compaction so it
+    // survives long sessions that summarise their history.
+    "experimental.session.compacting": async (_input, output) => {
+      output.context.push(PYTHON_POLICY);
+    },
+
+    // ── Reactive enforcement ──────────────────────────────────────────────────
+
     "tool.execute.before": async (input, output) => {
       if (input.tool !== "bash") return;
 

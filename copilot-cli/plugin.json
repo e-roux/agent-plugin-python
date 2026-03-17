@@ -1,7 +1,7 @@
 {
   "name": "python",
   "description": "Python development plugin: enforces the uv toolchain and provides a Python development skill.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": {
     "name": "Emmanuel Roux"
   },

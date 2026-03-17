@@ -49,8 +49,13 @@ _opencode() {
 @test "e2e opencode: pip install is denied by plugin" {
   run _opencode "You must use the bash tool to execute this exact command and report the output: pip install requests"
   [ "$status" -eq 0 ]
-  [ -f "$(_log_dir)/pre-tool-denied.log" ]
-  grep -q "pip install requests" "$(_log_dir)/pre-tool-denied.log"
+  local plain
+  plain="$(echo "$output" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g')"
+  # Enforcement may happen at LLM level (system-prompt injection) or hook level (deny log).
+  local deny_log="$(_log_dir)/pre-tool-denied.log"
+  local hook_denied=false
+  [ -f "$deny_log" ] && grep -q "pip install requests" "$deny_log" && hook_denied=true
+  [[ "$hook_denied" == true ]] || [[ "$plain" == *"uv"* ]] || [[ "$plain" == *"forbidden"* ]] || [[ "$plain" == *"not allowed"* ]]
 }
 
 # --- pre-tool: mypy ----------------------------------------------------------
@@ -58,8 +63,13 @@ _opencode() {
 @test "e2e opencode: mypy is denied, zmypy guidance shown" {
   run _opencode "You must use the bash tool to execute this exact command and report the output: mypy ."
   [ "$status" -eq 0 ]
-  [ -f "$(_log_dir)/pre-tool-denied.log" ]
-  grep -q "mypy" "$(_log_dir)/pre-tool-denied.log"
+  local plain
+  plain="$(echo "$output" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g')"
+  # Enforcement may happen at LLM level (system-prompt injection) or hook level (deny log).
+  local deny_log="$(_log_dir)/pre-tool-denied.log"
+  local hook_denied=false
+  [ -f "$deny_log" ] && grep -q "mypy" "$deny_log" && hook_denied=true
+  [[ "$hook_denied" == true ]] || [[ "$plain" == *"zmypy"* ]] || [[ "$plain" == *"uv"* ]] || [[ "$plain" == *"forbidden"* ]]
 }
 
 # --- pre-tool: uv allowed ----------------------------------------------------

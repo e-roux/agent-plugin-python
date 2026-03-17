@@ -9,6 +9,8 @@ import {
   applyRule,
   intercept,
   defaultRules,
+  PYTHON_POLICY,
+  BASH_TOOL_ADDENDUM,
   type BlockRule,
   type RewriteRule,
 } from "../../opencode/core";
@@ -219,5 +221,49 @@ describe("defaultRules — python", () => {
 
   it("does not block uv add", () => {
     expect(intercept("uv add requests", defaultRules)).toBe("uv add requests");
+  });
+});
+
+// ── PYTHON_POLICY ────────────────────────────────────────────────────────────
+
+describe("PYTHON_POLICY", () => {
+  it("is a non-empty string", () => {
+    expect(typeof PYTHON_POLICY).toBe("string");
+    expect(PYTHON_POLICY.length).toBeGreaterThan(0);
+  });
+
+  it("mentions all forbidden commands", () => {
+    const forbidden = ["python", "pip", "virtualenv", "mypy", "poetry"];
+    for (const cmd of forbidden) {
+      expect(PYTHON_POLICY).toContain(cmd);
+    }
+  });
+
+  it("mentions uv as the replacement", () => {
+    expect(PYTHON_POLICY).toContain("uv");
+  });
+
+  it("mentions zmypy as the mypy replacement", () => {
+    expect(PYTHON_POLICY).toContain("zmypy");
+  });
+});
+
+// ── BASH_TOOL_ADDENDUM ───────────────────────────────────────────────────────
+
+describe("BASH_TOOL_ADDENDUM", () => {
+  it("is a non-empty string", () => {
+    expect(typeof BASH_TOOL_ADDENDUM).toBe("string");
+    expect(BASH_TOOL_ADDENDUM.length).toBeGreaterThan(0);
+  });
+
+  it("mentions forbidden commands", () => {
+    expect(BASH_TOOL_ADDENDUM).toContain("python");
+    expect(BASH_TOOL_ADDENDUM).toContain("pip");
+    expect(BASH_TOOL_ADDENDUM).toContain("mypy");
+    expect(BASH_TOOL_ADDENDUM).toContain("poetry");
+  });
+
+  it("suggests uv as the alternative", () => {
+    expect(BASH_TOOL_ADDENDUM).toContain("uv");
   });
 });

@@ -86,6 +86,55 @@ export function intercept(
 }
 
 // ---------------------------------------------------------------------------
+// Policy text — reused in system-prompt injection and compaction context
+// ---------------------------------------------------------------------------
+
+/**
+ * Python toolchain policy text injected into the LLM system prompt and
+ * preserved during session compaction.  Ensures the model knows the rules
+ * before it has a chance to violate them.
+ */
+export const PYTHON_POLICY = `\
+## Python toolchain policy
+
+Use **uv** for all Python dependency and environment management. Direct use of
+python, pip, virtualenv, mypy, and poetry is FORBIDDEN.
+
+### Forbidden commands — use uv / zmypy instead
+
+| Forbidden command       | Use instead                                   |
+|-------------------------|-----------------------------------------------|
+| python / python3        | uv run script.py · uv run python              |
+| python -m pip           | uv add <package>                              |
+| pip / pip3              | uv add <package>                              |
+| python -m venv          | uv venv                                       |
+| virtualenv              | uv venv                                       |
+| mypy / python -m mypy   | zmypy src/ · uv run zmypy src/                |
+| poetry                  | uv init · uv add · uv sync · uv run           |
+
+### Quick reference
+
+\`\`\`bash
+uv run script.py          # run a script (resolves inline deps)
+uv run python             # start the interpreter
+uv add <package>          # add a dependency (updates pyproject.toml)
+uv sync                   # restore all dependencies
+uv venv                   # create a virtual environment
+zmypy src/                # type-check with zuban drop-in for mypy
+uv run zmypy src/         # same, via uv
+\`\`\``;
+
+/**
+ * Short addendum appended to the bash tool description so the LLM sees
+ * the blocked-command list in every tool-call context window.
+ */
+export const BASH_TOOL_ADDENDUM = `\
+
+⚠️  Python toolchain policy — the following commands are FORBIDDEN:
+python · python3 · pip · pip3 · virtualenv · mypy · poetry
+Use uv (uv run, uv add, uv sync, uv venv) and zmypy instead.`;
+
+// ---------------------------------------------------------------------------
 // Default rules — mirror the copilot pre-tool hook enforcement
 // More-specific rules are listed first (first-wins matching).
 // ---------------------------------------------------------------------------
