@@ -27,6 +27,8 @@ Direct use of `python`, `python3`, `pip`, `pip3`, or `venv` is prohibited everyw
 - Keep the Makefile well organised. Do not add targets without a clear purpose.
 - Minimise third-party dependencies. Security is a primary concern.
 - Run `make qa` before every commit. `make qa` runs `version.check + check + test`.
+- Update AGENTS.md if modification must be done
+- Update the CHANGELOG.md before commit
 
 ## Testing
 
