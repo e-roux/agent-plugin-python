@@ -1,14 +1,16 @@
 #!/usr/bin/env bats
 
-# E2E tests -- validate hook behaviour by invoking the real copilot CLI.
+# E2E tests -- validate hook behaviour and LSP integration by invoking the real copilot CLI.
 #
 # Each test:
 #   1. Creates an isolated TMPDIR and copies the hook scripts into it under
 #      .github/hooks/scripts/ (the standard project-level hooks location).
 #   2. Generates a .github/hooks/policy.json hooks config that copilot discovers
 #      automatically from *.json files in .github/hooks/.
-#   3. Runs copilot non-interactively from that directory (model: gpt-4.1).
-#   4. Asserts hook behaviour by inspecting the audit log written by the scripts
+#   3. For LSP tests: copies lsp.json to .github/lsp.json so copilot picks it up
+#      automatically as the repository-level LSP configuration.
+#   4. Runs copilot non-interactively from that directory (model: gpt-4.1).
+#   5. Asserts hook behaviour by inspecting the audit log written by the scripts
 #      (logs go to .github/hooks/logs/ via SCRIPT_DIR resolution) and/or by
 #      checking copilot's output for evidence of hook action.
 #
@@ -114,4 +116,62 @@ _copilot() {
   local plain
   plain="$(echo "$output" | perl -pe 's/\e\[[0-9;]*[a-zA-Z]//g')"
   [[ "$plain" == *"uv"* ]]
+}
+
+# --- LSP integration ----------------------------------------------------------
+
+# _setup_lsp installs the plugin's lsp.json as a repository-level LSP config
+# (.github/lsp.json) so copilot auto-discovers it without requiring a full
+# plugin install.
+_setup_lsp() {
+  mkdir -p "$WORK/.github"
+  cp "$PLUGIN_SRC/lsp.json" "$WORK/.github/lsp.json"
+}
+
+@test "e2e lsp: edit tool works with ruff and zuban lsp servers configured" {
+  _setup_lsp
+
+  # Create a Python file with deliberate style violations that ruff would flag:
+  #   - missing whitespace around operator (E225)
+  #   - unused import (F401)
+  cat > "$WORK/sample.py" << 'PYEOF'
+import os
+x=1
+print(x)
+PYEOF
+
+  run _copilot "Use the edit tool to fix all PEP 8 style issues in sample.py. Remove unused imports and add spaces around operators."
+  [ "$status" -eq 0 ]
+
+  # The edit tool must have modified the file.
+  [ -f "$WORK/sample.py" ]
+
+  # ruff LSP diagnostic for E225 (missing whitespace around =) must be resolved.
+  local plain
+  plain="$(cat "$WORK/sample.py")"
+  [[ "$plain" == *"x = 1"* ]]
+}
+
+@test "e2e lsp: zuban lsp provides type diagnostics on edit" {
+  _setup_lsp
+
+  # Create a Python file with a type annotation so zuban can analyse it.
+  cat > "$WORK/typed.py" << 'PYEOF'
+def greet(name: str) -> str:
+    return "Hello, " + name
+
+
+result: int = greet("world")
+PYEOF
+
+  run _copilot "Use the edit tool to fix the type error in typed.py: the variable 'result' is annotated as int but greet() returns str."
+  [ "$status" -eq 0 ]
+
+  # The file must have been edited.
+  [ -f "$WORK/typed.py" ]
+
+  # The type annotation on result should be corrected to str.
+  local plain
+  plain="$(cat "$WORK/typed.py")"
+  [[ "$plain" == *"result: str"* ]]
 }

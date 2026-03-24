@@ -1,0 +1,20 @@
+{
+  "lspServers": {
+    "ruff": {
+      "command": "ruff",
+      "args": ["server"],
+      "fileExtensions": {
+        ".py": "python",
+        ".pyi": "python"
+      }
+    },
+    "zuban": {
+      "command": "zuban",
+      "args": ["server"],
+      "fileExtensions": {
+        ".py": "python",
+        ".pyi": "python"
+      }
+    }
+  }
+}
