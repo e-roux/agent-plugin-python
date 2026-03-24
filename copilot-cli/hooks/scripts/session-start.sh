@@ -7,18 +7,7 @@ LOG_DIR="$SCRIPT_DIR/../logs"
 INPUT="$(cat)"
 CWD="$(echo "$INPUT" | jq -r '.cwd // "unknown"')"
 
-cat << 'EOF'
-┌─────────────────────────────────────────────────┐
-│           PYTHON / UV POLICY ACTIVE             │
-├─────────────────────────────────────────────────┤
-│  Direct python/pip calls are FORBIDDEN.         │
-│  Use uv instead:                                │
-│    uv run script.py     — run a script          │
-│    uv add <package>     — add a dependency      │
-│    uvx <tool>           — run a tool            │
-│    uv run --with <pkg>  — inline dependency     │
-└─────────────────────────────────────────────────┘
-EOF
+jq -cn '{additionalContext: "## Python / uv Policy Active\n\nDirect `python` or `pip` calls are FORBIDDEN. Use `uv` instead:\n- `uv run script.py` — run a script\n- `uv add <package>` — add a dependency\n- `uvx <tool>` — run a tool\n- `uv run --with <pkg>` — inline dependency"}'
 
 # Write audit log so the hook invocation is verifiable in tests.
 mkdir -p "$LOG_DIR" && \
