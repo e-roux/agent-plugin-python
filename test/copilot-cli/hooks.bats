@@ -142,7 +142,54 @@ SCRIPTS_DIR="$BATS_TEST_DIRNAME/../../copilot-cli/hooks/scripts"
   [[ "$reason" == *"zmypy"* ]]
 }
 
-# ─── session-start.sh ─────────────────────────────────────────────────────────
+
+# ─── lsp.json structure validation ───────────────────────────────────────────
+
+LSP_JSON="$BATS_TEST_DIRNAME/../../copilot-cli/lsp.json"
+
+@test "lsp.json: is valid JSON" {
+  jq . "$LSP_JSON" >/dev/null
+}
+
+@test "lsp.json: contains ruff server" {
+  server="$(jq -r '.lspServers.ruff.command' "$LSP_JSON")"
+  [ "$server" = "ruff" ]
+}
+
+@test "lsp.json: ruff args contain server subcommand" {
+  args="$(jq -r '.lspServers.ruff.args[]' "$LSP_JSON")"
+  [[ "$args" == *"server"* ]]
+}
+
+@test "lsp.json: ruff handles .py files" {
+  lang="$(jq -r '.lspServers.ruff.fileExtensions[".py"]' "$LSP_JSON")"
+  [ "$lang" = "python" ]
+}
+
+@test "lsp.json: ruff handles .pyi files" {
+  lang="$(jq -r '.lspServers.ruff.fileExtensions[".pyi"]' "$LSP_JSON")"
+  [ "$lang" = "python" ]
+}
+
+@test "lsp.json: contains zuban server" {
+  server="$(jq -r '.lspServers.zuban.command' "$LSP_JSON")"
+  [ "$server" = "zuban" ]
+}
+
+@test "lsp.json: zuban args contain server subcommand" {
+  args="$(jq -r '.lspServers.zuban.args[]' "$LSP_JSON")"
+  [[ "$args" == *"server"* ]]
+}
+
+@test "lsp.json: zuban handles .py files" {
+  lang="$(jq -r '.lspServers.zuban.fileExtensions[".py"]' "$LSP_JSON")"
+  [ "$lang" = "python" ]
+}
+
+@test "lsp.json: zuban handles .pyi files" {
+  lang="$(jq -r '.lspServers.zuban.fileExtensions[".pyi"]' "$LSP_JSON")"
+  [ "$lang" = "python" ]
+}
 
 @test "session-start: exits successfully" {
   local input='{"timestamp":1704614400000,"cwd":"/tmp","source":"new"}'

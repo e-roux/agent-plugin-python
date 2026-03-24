@@ -30,11 +30,31 @@ Direct use of `python`, `python3`, `pip`, `pip3`, or `venv` is prohibited everyw
 - Update AGENTS.md if modification must be done
 - Update the CHANGELOG.md before commit
 
+## LSP servers (`copilot-cli/lsp.json`)
+
+The plugin ships `copilot-cli/lsp.json` which configures two LSP servers that activate automatically when the plugin is installed. They can also be activated at repository level by copying the file to `.github/lsp.json`.
+
+| Server | Command | Purpose |
+|--------|---------|---------|
+| `ruff` | `ruff server` | Linting, formatting, and import organisation (`.py`, `.pyi`) |
+| `zuban` | `zuban server` | Mypy-compatible type checking in Rust, 20–200× faster than mypy (`.py`, `.pyi`) |
+
+**Prerequisites** (must be installed on the developer machine):
+
+```bash
+uv tool install ruff
+uv tool install zuban
+```
+
+Both servers must be on `PATH`. Verify with `ruff --version` and `zuban --version`.
+
 ## Testing
 
 ### Copilot CLI hooks (`copilot-cli/`)
 
 Hooks are unit-tested with bats (`test/copilot-cli/hooks.bats`) and end-to-end with a real Copilot CLI invocation (`test/copilot-cli/hooks_e2e.bats`).
+
+`hooks.bats` also includes JSON structure validation tests for `copilot-cli/lsp.json`.
 
 E2E tests must:
 

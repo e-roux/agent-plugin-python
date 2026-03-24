@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.1] - 2026-03-17
+## [0.4.0] - 2026-03-17
+
+### Added
+
+- **LSP integration** (`copilot-cli/lsp.json`): repository-level LSP server configuration for the copilot-cli plugin with full working configurations for:
+  - **ruff** (`ruff server`) — linting, formatting, and import-organisation diagnostics for `.py` / `.pyi` files.
+  - **zuban** (`zuban server`) — mypy-compatible, Rust-based type-checking diagnostics for `.py` / `.pyi` files, 20-200× faster than mypy.
+- `plugin.json` now references `lsp.json` via the `lspServers` field so both LSP servers are activated automatically on plugin install.
+- **LSP unit tests** (`test/copilot-cli/hooks.bats`): JSON structure validation tests for `lsp.json` (9 new tests).
+- **LSP E2E tests** (`test/copilot-cli/hooks_e2e.bats`): two real copilot CLI invocations (model: `gpt-4.1`) that verify:
+  1. The `edit` tool works correctly with ruff and zuban LSP servers active and fixes ruff E225 / F401 violations.
+  2. The `edit` tool correctly resolves a zuban type-annotation mismatch.
 
 ### Added
 
@@ -60,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AGENTS.md configuration for plugin discovery
 - plugin.json metadata
 
-[Unreleased]: https://github.com/e-roux/agent-plugin-python/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/e-roux/agent-plugin-python/compare/v0.2.0...v0.3.0
+[Unreleased]: https://github.com/e-roux/agent-plugin-python/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/e-roux/agent-plugin-python/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/e-roux/agent-plugin-python/compare/v0.3.0...v0.3.1
 [0.2.0]: https://github.com/e-roux/agent-plugin-python/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/e-roux/agent-plugin-python/releases/tag/v0.1.0
