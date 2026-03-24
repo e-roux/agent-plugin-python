@@ -197,10 +197,10 @@ LSP_JSON="$BATS_TEST_DIRNAME/../../copilot-cli/lsp.json"
   [ "$status" -eq 0 ]
 }
 
-@test "session-start: outputs policy banner" {
+@test "session-start: outputs additionalContext JSON" {
   local input='{"timestamp":1704614400000,"cwd":"/tmp","source":"new"}'
   run bash -c "echo '$input' | '$SCRIPTS_DIR/session-start.sh'"
-  [[ "$output" == *"POLICY"* ]]
+  echo "$output" | jq -e '.additionalContext' > /dev/null
 }
 
 @test "session-start: banner mentions uv" {
